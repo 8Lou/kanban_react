@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules
+
+# Vite build output and cache
+/dist
+.vite
+
+# Local environment variables
+.env.local
+.env.*.local
+
+# IDE and editor directories
+.idea/
+.vscode/
+
+# OS-generated files
+.DS_Store
