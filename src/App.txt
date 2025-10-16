@@ -1,0 +1,236 @@
+// подключить при запуски сервера
+import { useState, useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { KanbanColumn } from './components/KanbanColumn';
+import { AddTaskDialog } from './components/AddTaskDialog';
+import { MetricsGrid } from './components/MetricsGrid';
+import { PriorityDistribution } from './components/PriorityDistribution';
+import { WIPLimitSettings } from './components/WIPLimitSettings';
+import { TaskDetailDialog } from './components/TaskDetailDialog';
+import { BufferReportDialog } from './components/BufferReportDialog';
+import { FullKitTemplatesDialog } from './components/FullKitTemplatesDialog';
+import { LayoutGrid, Settings, BarChart3, ClipboardList } from 'lucide-react';
+import { Button } from './components/ui/button';
+import { Task } from './types/task';
+
+export default function App() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [wipLimits, setWipLimits] = useState({
+    todo: 10,
+    inProgress: 3,
+    done: 20,
+    archive: 100,
+  });
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<string>('todo');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskDetailOpen, setTaskDetailOpen] = useState(false);
+  const [bufferReportOpen, setBufferReportOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/tasks')
+      .then((response) => response.json())
+      .then((data) => setTasks(data));
+  }, []);
+
+  const moveTask = (taskId: string, newStatus: string) => {
+    const targetTask = tasks.find((task) => task.id === taskId);
+    if (targetTask && targetTask.status !== newStatus) {
+      fetch(`http://localhost:3001/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+        .then((response) => response.json())
+        .then((updatedTaskFromServer) => {
+          setTasks(
+            tasks.map((task) =>
+              task.id === taskId ? updatedTaskFromServer : task
+            )
+          );
+        });
+    }
+  };
+
+  const addTask = (taskData: Omit<Task, 'id' | 'status' | 'creator' | 'createdAt' | 'fullKitStatus' | 'bufferConsumption' | 'constraintType' | 'attachments' | 'comments' | 'activityLog'> & {assignee: string}) => {
+    const newTask = {
+      ...taskData,
+      status: currentStatus,
+      creator: 'Текущий пользователь',
+      createdAt: new Date().toISOString(),
+      assignees: taskData.assignee ? [taskData.assignee] : [],
+      fullKitStatus: {
+        isComplete: false,
+        checklist: [],
+      },
+      bufferConsumption: 0,
+      constraintType: 'none',
+      attachments: [],
+      comments: [],
+      activityLog: [
+        {
+          id: Date.now().toString(),
+          user: 'Текущий пользователь',
+          action: 'создал задачу',
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    };
+
+    fetch('http://localhost:3001/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newTask),
+    })
+      .then((response) => response.json())
+      .then((addedTask) => {
+        setTasks([...tasks, addedTask]);
+        setDialogOpen(false);
+      });
+  };
+
+  const handleAddTask = (status: string) => {
+    setCurrentStatus(status);
+    setDialogOpen(true);
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setTaskDetailOpen(true);
+    }
+  };
+
+  const handleTaskUpdate = (updatedTask: Task) => {
+     fetch(`http://localhost:3001/tasks/${updatedTask.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTask),
+      })
+        .then((response) => response.json())
+        .then((updatedTaskFromServer) => {
+          setTasks(
+            tasks.map((task) =>
+              task.id === updatedTask.id ? updatedTaskFromServer : task
+            )
+          );
+        });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    fetch(`http://localhost:3001/tasks/${taskId}`, {
+      method: 'DELETE',
+    }).then(() => {
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+    });
+  };
+
+  const handleSaveWIPLimits = (limits: typeof wipLimits) => {
+    setWipLimits(limits);
+  };
+
+  const columns = [
+    { title: 'Очередь', status: 'todo' },
+    { title: 'В работе', status: 'inProgress' },
+    { title: 'На проверке', status: 'done' },
+    { title: 'Архив', status: 'archive' },
+  ];
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <LayoutGrid className="h-8 w-8 text-blue-600" />
+                <h1 className="text-slate-800">Канбан доска ТОС</h1>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setTemplatesOpen(true)}>
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Шаблоны
+                </Button>
+                <Button variant="outline" onClick={() => setBufferReportOpen(true)}>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Отчеты
+                </Button>
+                <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  WIP-лимиты
+                </Button>
+              </div>
+            </div>
+            <p className="text-slate-600">
+              Управляйте задачами проекта по методологии Теории ограничений систем (ТОС)
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <MetricsGrid tasks={tasks} />
+          </div>
+
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {columns.map((column) => (
+              <KanbanColumn
+                key={column.status}
+                title={column.title}
+                status={column.status}
+                tasks={tasks.filter((task) => task.status === column.status)}
+                wipLimit={wipLimits[column.status as keyof typeof wipLimits]}
+                onDrop={moveTask}
+                onAddTask={() => handleAddTask(column.status)}
+                onDeleteTask={handleDeleteTask}
+                onTaskClick={handleTaskClick}
+              />
+            ))}
+          </div>
+
+          <PriorityDistribution tasks={tasks} />
+        </div>
+
+        <AddTaskDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onAdd={addTask}
+        />
+
+        <WIPLimitSettings
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          currentLimits={wipLimits}
+          onSave={handleSaveWIPLimits}
+        />
+
+        <TaskDetailDialog
+          task={selectedTask}
+          open={taskDetailOpen}
+          onOpenChange={setTaskDetailOpen}
+          onUpdate={handleTaskUpdate}
+        />
+
+        <BufferReportDialog
+          tasks={tasks}
+          open={bufferReportOpen}
+          onOpenChange={setBufferReportOpen}
+        />
+
+        <FullKitTemplatesDialog
+          open={templatesOpen}
+          onOpenChange={setTemplatesOpen}
+        />
+      </div>
+    </DndProvider>
+  );
+}

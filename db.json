@@ -252,7 +252,6 @@
       "title": "задача 16 октября",
       "description": "залью мини-проект на гит",
       "priority": "medium",
-      "assignee": "",
       "dueDate": "2025-10-24",
       "status": "archive",
       "creator": "Текущий пользователь",
@@ -280,7 +279,6 @@
       "title": "Написать тех доку",
       "description": "Предоставить в сроки",
       "priority": "medium",
-      "assignee": "",
       "dueDate": "2025-10-27",
       "status": "inProgress",
       "creator": "Текущий пользователь",
@@ -308,8 +306,6 @@
       "title": "проверка барабана",
       "description": "ааааааааааааа",
       "priority": "medium",
-      "assignee": "",
-      "dueDate": "",
       "status": "inProgress",
       "creator": "Текущий пользователь",
       "createdAt": "2025-10-16T06:05:55.473Z",
@@ -328,6 +324,34 @@
           "user": "Текущий пользователь",
           "action": "создал задачу",
           "timestamp": "2025-10-16T06:05:55.473Z"
+        }
+      ]
+    },
+    {
+      "id": "c197",
+      "title": "tatazvdvdv",
+      "description": "vfvfv",
+      "priority": "medium",
+      "assignee": "",
+      "dueDate": "",
+      "status": "done",
+      "creator": "Текущий пользователь",
+      "createdAt": "2025-10-16T09:04:57.827Z",
+      "assignees": [],
+      "fullKitStatus": {
+        "isComplete": false,
+        "checklist": []
+      },
+      "bufferConsumption": 0,
+      "constraintType": "none",
+      "attachments": [],
+      "comments": [],
+      "activityLog": [
+        {
+          "id": "1760605497827",
+          "user": "Текущий пользователь",
+          "action": "создал задачу",
+          "timestamp": "2025-10-16T09:04:57.827Z"
         }
       ]
     }

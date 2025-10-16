@@ -23,7 +23,7 @@ export function KanbanColumn({ title, status, tasks, wipLimit, onDrop, onAddTask
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
-  }));
+  }), [onDrop, status]);
 
   const isOverLimit = wipLimit ? tasks.length > wipLimit : false;
   const isNearLimit = wipLimit ? tasks.length === wipLimit : false;
