@@ -1,0 +1,144 @@
+import { useDrag } from 'react-dnd';
+import { Card } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Trash2, Calendar, Users, CheckCircle2, AlertTriangle } from 'lucide-react';
+
+interface KanbanCardProps {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  assignees?: string[];
+  dueDate?: string;
+  bufferConsumption?: number;
+  fullKitComplete?: boolean;
+  constraintType?: 'drum' | 'constraint' | 'none';
+  onDelete: (id: string) => void;
+  onClick?: (id: string) => void;
+}
+
+export function KanbanCard({ 
+  id, 
+  title, 
+  description, 
+  priority, 
+  assignees = [], 
+  dueDate, 
+  bufferConsumption = 0,
+  fullKitComplete = false,
+  constraintType = 'none',
+  onDelete,
+  onClick 
+}: KanbanCardProps) {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'CARD',
+    item: { id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  }));
+
+  const priorityColors = {
+    low: 'bg-blue-100 text-blue-800 border-blue-200',
+    medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    high: 'bg-red-100 text-red-800 border-red-200',
+  };
+
+  const priorityLabels = {
+    low: 'Низкий',
+    medium: 'Средний',
+    high: 'Высокий',
+  };
+
+  const getBufferColor = () => {
+    if (bufferConsumption <= 33) return 'bg-green-500';
+    if (bufferConsumption <= 66) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  return (
+    <div
+      ref={drag}
+      className={`transition-opacity ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+    >
+      <Card 
+        className="p-4 mb-3 cursor-pointer hover:shadow-md transition-shadow bg-white"
+        onClick={(e) => {
+          if (onClick && !(e.target as HTMLElement).closest('button')) {
+            onClick(id);
+          }
+        }}
+      >
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1 pr-2">
+            <div className="flex items-center gap-2 mb-1">
+              <h3>{title}</h3>
+              {constraintType === 'drum' && <span className="text-lg">🥁</span>}
+              {constraintType === 'constraint' && <AlertTriangle className="h-4 w-4 text-red-500" />}
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(id);
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+        <p className="text-gray-600 mb-3 text-sm line-clamp-2">{description}</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge className={priorityColors[priority]}>
+            {priorityLabels[priority]}
+          </Badge>
+          {fullKitComplete && (
+            <Badge className="bg-green-100 text-green-800 border-green-200">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Комплект
+            </Badge>
+          )}
+        </div>
+        
+        {/* Индикатор буфера */}
+        {bufferConsumption > 0 && (
+          <div className="mb-3">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-gray-600">Буфер</span>
+              <span className="text-gray-600">{bufferConsumption}%</span>
+            </div>
+            <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="absolute inset-0 flex">
+                <div className="w-1/3 bg-green-100"></div>
+                <div className="w-1/3 bg-yellow-100"></div>
+                <div className="w-1/3 bg-red-100"></div>
+              </div>
+              <div
+                className={`absolute left-0 top-0 h-full ${getBufferColor()} transition-all`}
+                style={{ width: `${bufferConsumption}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1">
+          {assignees.length > 0 && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <Users className="h-3 w-3" />
+              <span className="text-xs">{assignees.join(', ')}</span>
+            </div>
+          )}
+          {dueDate && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <Calendar className="h-3 w-3" />
+              <span className="text-xs">{dueDate}</span>
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
