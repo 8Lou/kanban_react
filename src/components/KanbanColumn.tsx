@@ -30,8 +30,9 @@ export function KanbanColumn({ title, status, tasks, wipLimit, onDrop, onAddTask
 
   const headerColors: Record<string, string> = {
     todo: 'bg-gray-100 border-gray-300',
-    inProgress: 'bg-blue-100 border-blue-300',
-    done: 'bg-green-100 border-green-300',
+    inProgress: 'bg-green-100 border-green-300',
+    done: 'bg-blue-100 border-blue-300',
+    archive: 'bg-orange-100 border-orange-300',
   };
 
   return (

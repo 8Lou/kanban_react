@@ -3,7 +3,8 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { KanbanColumn } from './components/KanbanColumn';
 import { AddTaskDialog } from './components/AddTaskDialog';
-import { PerformanceMetrics } from './components/PerformanceMetrics';
+import { MetricsGrid } from './components/MetricsGrid';
+import { PriorityDistribution } from './components/PriorityDistribution';
 import { WIPLimitSettings } from './components/WIPLimitSettings';
 import { TaskDetailDialog } from './components/TaskDetailDialog';
 import { BufferReportDialog } from './components/BufferReportDialog';
@@ -298,7 +299,7 @@ export default function App() {
     { title: 'Очередь', status: 'todo' },
     { title: 'В работе', status: 'inProgress' },
     { title: 'На проверке', status: 'done' },
-    { title: 'Архив', status: 'done' },
+    { title: 'Архив', status: 'archive' },
   ];
 
   return (
@@ -331,7 +332,9 @@ export default function App() {
             </p>
           </div>
 
-          <PerformanceMetrics tasks={tasks} />
+          <div className="mb-8">
+            <MetricsGrid tasks={tasks} />
+          </div>
 
           <div className="flex gap-6 overflow-x-auto pb-4">
             {columns.map((column) => (
@@ -348,6 +351,8 @@ export default function App() {
               />
             ))}
           </div>
+
+          <PriorityDistribution tasks={tasks} />
         </div>
 
         <AddTaskDialog
