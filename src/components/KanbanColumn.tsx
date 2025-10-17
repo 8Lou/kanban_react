@@ -10,13 +10,14 @@ interface KanbanColumnProps {
   status: string;
   tasks: Task[];
   wipLimit?: number;
+  isConstraint?: boolean;
   onDrop: (taskId: string, newStatus: string) => void;
   onAddTask: (status: string) => void;
   onDeleteTask: (taskId: string) => void;
   onTaskClick?: (taskId: string) => void;
 }
 
-export function KanbanColumn({ title, status, tasks, wipLimit, onDrop, onAddTask, onDeleteTask, onTaskClick }: KanbanColumnProps) {
+export function KanbanColumn({ title, status, tasks, wipLimit, isConstraint, onDrop, onAddTask, onDeleteTask, onTaskClick }: KanbanColumnProps) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'CARD',
     drop: (item: { id: string }) => onDrop(item.id, status),
@@ -32,11 +33,11 @@ export function KanbanColumn({ title, status, tasks, wipLimit, onDrop, onAddTask
     todo: 'bg-gray-100 border-gray-300',
     inProgress: 'bg-green-100 border-green-300',
     done: 'bg-blue-100 border-blue-300',
-    archive: 'bg-orange-100 border-orange-300',
+    archive: 'bg-purple-100 border-purple-300',
   };
 
   return (
-    <div className="flex flex-col h-full min-w-[320px]">
+    <div className={`flex flex-col h-full min-w-[320px] ${isConstraint ? 'border-red-500 border-4' : ''}`}>
       <div className={`p-4 rounded-t-lg border-b-2 ${
         isOverLimit 
           ? 'bg-red-100 border-red-400' 

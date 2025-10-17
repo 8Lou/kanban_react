@@ -1,5 +1,5 @@
 
-  # Kanban Board Design
+  # Kanban Board Proto
 
 Деплой: https://8lou.github.io/kanban_react/
 ![alt text](image.png)

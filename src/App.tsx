@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { KanbanColumn } from './components/KanbanColumn';
@@ -9,9 +9,21 @@ import { WIPLimitSettings } from './components/WIPLimitSettings';
 import { TaskDetailDialog } from './components/TaskDetailDialog';
 import { BufferReportDialog } from './components/BufferReportDialog';
 import { FullKitTemplatesDialog } from './components/FullKitTemplatesDialog';
-import { LayoutGrid, Settings, BarChart3, ClipboardList } from 'lucide-react';
+import { RopeControl } from './components/RopeControl';
+import { TOCDashboard } from './components/TOCDashboard';
+import { LayoutGrid, Settings, BarChart3, ClipboardList, Anchor, AlertTriangle } from 'lucide-react';
 import { Button } from './components/ui/button';
+import { Card } from './components/ui/card';
 import { Task } from './types/task';
+import { ToastContainer } from './components/ui/toast-container';
+import { 
+  identifyConstraint, 
+  canStartNewTask, 
+  validateFullKit,
+  sortTasksByPriority,
+  calculateFlowBuffer,
+} from './utils/toc-calculations';
+import { toast } from './utils/toast';
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([
@@ -212,23 +224,98 @@ export default function App() {
   const [taskDetailOpen, setTaskDetailOpen] = useState(false);
   const [bufferReportOpen, setBufferReportOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [ropeControlOpen, setRopeControlOpen] = useState(false);
   const [wipLimits, setWipLimits] = useState({
     todo: 10,
     inProgress: 3,
     done: 20,
-    archive: 100,
   });
 
-  const handleDrop = (taskId: string, newStatus: string) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
-  };
+  // Автоматическое определение ограничения
+  const [detectedConstraint, setDetectedConstraint] = useState<string | null>(null);
 
-  const handleSaveLimits = (newLimits) => {
-    setWipLimits(newLimits);
+  useEffect(() => {
+    fetch('http://localhost:3001/tasks')
+      .then((res) => res.json())
+      .then((data) => setTasks(data));
+  }, []);
+
+  useEffect(() => {
+    const tasksByStatus = {
+      todo: tasks.filter(t => t.status === 'todo'),
+      inProgress: tasks.filter(t => t.status === 'inProgress'),
+      done: tasks.filter(t => t.status === 'done'),
+    };
+    
+    const constraint = identifyConstraint(tasksByStatus, wipLimits);
+    if (constraint !== detectedConstraint) {
+      setDetectedConstraint(constraint);
+      if (constraint) {
+        toast.warning(`Обнаружено ограничение в колонке: ${
+          constraint === 'todo' ? 'К выполнению' : 
+          constraint === 'inProgress' ? 'В работе' : 
+          'Выполнено'
+        }`);
+      }
+    }
+  }, [tasks, wipLimits]);
+
+  const handleDrop = (taskId: string, newStatus: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Проверка Full-kit при переходе в "В работе"
+    if (newStatus === 'inProgress' && task.status === 'todo') {
+      const validation = validateFullKit(task);
+      if (!validation.valid) {
+        toast.error('Ворота Full-kit закрыты', {
+          description: 'Завершите подготовку полного комплекта перед началом работы',
+        });
+        return;
+      }
+    }
+
+    // Проверка WIP-лимита
+    const targetTasks = tasks.filter(t => t.status === newStatus);
+    const limit = wipLimits[newStatus as keyof typeof wipLimits];
+    
+    if (targetTasks.length >= limit) {
+      toast.error('WIP-лимит превышен', {
+        description: `В колонке "${
+          newStatus === 'todo' ? 'К выполнению' : 
+          newStatus === 'inProgress' ? 'В работе' : 
+          'Выполнено'
+        }" достигнут лимит (${limit} задач)`,
+      });
+      return;
+    }
+
+    // Обновляем задачу
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => {
+        if (t.id === taskId) {
+          const activityEntry = {
+            id: Date.now().toString(),
+            user: 'Текущий пользователь',
+            action: `переместил задачу в "${
+              newStatus === 'todo' ? 'Очередь' : 
+              newStatus === 'inProgress' ? 'В работе' : 
+              'На проверке'
+            }"`,
+            timestamp: new Date().toISOString(),
+          };
+          
+          return {
+            ...t,
+            status: newStatus,
+            activityLog: [...t.activityLog, activityEntry],
+          };
+        }
+        return t;
+      })
+    );
+
+    toast.success('Задача перемещена');
   };
 
   const handleAddTask = (status: string) => {
@@ -293,6 +380,36 @@ export default function App() {
 
   const handleSaveWIPLimits = (limits: typeof wipLimits) => {
     setWipLimits(limits);
+    toast.success('WIP-лимиты обновлены');
+  };
+
+  // Сортировка задач по автоматическому приоритету
+  const getSortedTasks = (status: string) => {
+    const statusTasks = tasks.filter(t => t.status === status);
+    return sortTasksByPriority(statusTasks);
+  };
+
+  // Расчет загрузки ограничения
+  const getConstraintLoad = () => {
+    if (!detectedConstraint) return 0;
+    const constraintTasks = tasks.filter(t => t.status === detectedConstraint);
+    const limit = wipLimits[detectedConstraint as keyof typeof wipLimits];
+    return (constraintTasks.length / limit) * 100;
+  };
+
+  // Проверка возможности запуска новой задачи
+  const checkCanStartNew = (status: string) => {
+    const currentTasks = tasks.filter(t => t.status === status);
+    const limit = wipLimits[status as keyof typeof wipLimits];
+    const constraintTasks = detectedConstraint ? tasks.filter(t => t.status === detectedConstraint) : [];
+    
+    return canStartNewTask(
+      currentTasks.length,
+      limit,
+      detectedConstraint || '',
+      status,
+      constraintTasks
+    );
   };
 
   const columns = [
@@ -310,9 +427,24 @@ export default function App() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
                 <LayoutGrid className="h-8 w-8 text-blue-600" />
-                <h1 className="text-slate-800">Канбан доска ТОС</h1>
+                <div>
+                  <h1 className="text-slate-800">Канбан доска ТОС</h1>
+                  {detectedConstraint && (
+                    <p className="text-sm text-orange-600 mt-1">
+                      ⚠️ Обнаружено ограничение: {
+                        detectedConstraint === 'todo' ? 'К выполнению' : 
+                        detectedConstraint === 'inProgress' ? 'В работе' : 
+                        'Выполнено'
+                      }
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setRopeControlOpen(!ropeControlOpen)}>
+                  <Anchor className="h-4 w-4 mr-2" />
+                  Канат
+                </Button>
                 <Button variant="outline" onClick={() => setTemplatesOpen(true)}>
                   <ClipboardList className="h-4 w-4 mr-2" />
                   Шаблоны
@@ -332,24 +464,38 @@ export default function App() {
             </p>
           </div>
 
-          <div className="mb-8">
+          <div className="flex flex-col mb-2">
             <MetricsGrid tasks={tasks} />
+            {/* Дашборд ТОС */}
+            <TOCDashboard tasks={tasks} detectedConstraint={detectedConstraint} />
           </div>
 
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {columns.map((column) => (
-              <KanbanColumn
-                key={column.status}
-                title={column.title}
-                status={column.status}
-                tasks={tasks.filter((task) => task.status === column.status)}
-                wipLimit={wipLimits[column.status as keyof typeof wipLimits]}
-                onDrop={handleDrop}
-                onAddTask={handleAddTask}
-                onDeleteTask={handleDeleteTask}
-                onTaskClick={handleTaskClick}
-              />
-            ))}
+            {columns.map((column) => {
+              const isConstraint = column.status === detectedConstraint;
+              return (
+                <div key={column.status} className="relative">
+                  {isConstraint && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Ограничение (Барабан)
+                      </div>
+                    </div>
+                  )}
+                  <KanbanColumn
+                    title={column.title}
+                    status={column.status}
+                    tasks={getSortedTasks(column.status)}
+                    wipLimit={wipLimits[column.status as keyof typeof wipLimits]}
+                    onDrop={handleDrop}
+                    onAddTask={handleAddTask}
+                    onDeleteTask={handleDeleteTask}
+                    onTaskClick={handleTaskClick}
+                  />
+                </div>
+              );
+            })}
           </div>
 
           <PriorityDistribution tasks={tasks} />
@@ -385,6 +531,8 @@ export default function App() {
           open={templatesOpen}
           onOpenChange={setTemplatesOpen}
         />
+
+        <ToastContainer />
       </div>
     </DndProvider>
   );

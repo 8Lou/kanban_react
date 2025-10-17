@@ -29,9 +29,9 @@ export function TOCDashboard({ tasks, detectedConstraint }: TOCDashboardProps) {
   const metrics = calculateFlowMetrics(tasks);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="flex md:flex-row gap-4 mb-6">
       {/* Метрики потока */}
-      <Card className="p-4">
+      <Card className="p-4 w-full md:w-1/2">
         <h3 className="mb-4 flex items-center gap-2">
           <Activity className="h-4 w-4 text-blue-600" />
           Метрики потока
@@ -73,7 +73,7 @@ export function TOCDashboard({ tasks, detectedConstraint }: TOCDashboardProps) {
       </Card>
 
       {/* Триаж задач */}
-      <Card className="p-4">
+      <Card className="p-4 w-full md:w-1/2">
         <h3 className="mb-4">Авто-Триаж задач</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-2 bg-green-50 rounded">
