@@ -3,34 +3,26 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Trash2, Calendar, Users, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FullKitGate } from './FullKitGate';
+import { calculateTaskPriority } from '../utils/toc-calculations';
+
+import { Task } from '../types/task';
 
 interface KanbanCardProps {
-  id: string;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high';
-  assignees?: string[];
-  dueDate?: string;
-  bufferConsumption?: number;
-  fullKitComplete?: boolean;
-  constraintType?: 'drum' | 'constraint' | 'none';
+  task: Task;
   onDelete: (id: string) => void;
   onClick?: (id: string) => void;
+  showFullKitGate?: boolean;
 }
 
 export function KanbanCard({ 
-  id, 
-  title, 
-  description, 
-  priority, 
-  assignees = [], 
-  dueDate, 
-  bufferConsumption = 0,
-  fullKitComplete = false,
-  constraintType = 'none',
+  task,
   onDelete,
-  onClick 
+  onClick,
+  showFullKitGate = false,
 }: KanbanCardProps) {
+  const { id, title, description, priority, assignees, dueDate, bufferConsumption, fullKitStatus, constraintType } = task;
+  
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'CARD',
     item: { id },
@@ -95,13 +87,20 @@ export function KanbanCard({
           <Badge className={priorityColors[priority]}>
             {priorityLabels[priority]}
           </Badge>
-          {fullKitComplete && (
+          {fullKitStatus.isComplete && (
             <Badge className="bg-green-100 text-green-800 border-green-200">
               <CheckCircle2 className="h-3 w-3 mr-1" />
               Комплект
             </Badge>
           )}
         </div>
+
+        {/* Full-kit gate для задач в очереди */}
+        {showFullKitGate && (
+          <div className="mb-3">
+            <FullKitGate task={task} compact />
+          </div>
+        )}
         
         {/* Индикатор буфера */}
         {bufferConsumption > 0 && (

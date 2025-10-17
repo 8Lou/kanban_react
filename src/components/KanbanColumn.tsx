@@ -108,15 +108,7 @@ export function KanbanColumn({ title, status, tasks, wipLimit, isConstraint, onD
         {tasks.map((task) => (
           <KanbanCard
             key={task.id}
-            id={task.id}
-            title={task.title}
-            description={task.description}
-            priority={task.priority}
-            assignees={task.assignees}
-            dueDate={task.dueDate}
-            bufferConsumption={task.bufferConsumption}
-            fullKitComplete={task.fullKitStatus.isComplete}
-            constraintType={task.constraintType}
+            task={task}
             onDelete={onDeleteTask}
             onClick={onTaskClick}
           />
