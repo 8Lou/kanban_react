@@ -10,6 +10,12 @@ function Progress({
   value,
   ...props
 }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  const getProgressColor = (progress: number) => {
+    if (progress >= 100) return '#ef4444';
+    if (progress >= 70) return '#eab308';
+    return '#10b981';
+  };
+
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
@@ -22,9 +28,9 @@ function Progress({
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
         className="h-full w-full flex-1 transition-all"
-        style={{ 
+        style={{
           transform: `translateX(-${100 - (value || 0)}%)`,
-          backgroundColor: '#10b981' // зеленый цвет
+          backgroundColor: getProgressColor(value || 0)
         }}
       />
     </ProgressPrimitive.Root>

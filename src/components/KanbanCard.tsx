@@ -2,6 +2,7 @@ import { useDrag } from 'react-dnd';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+
 import { Trash2, Calendar, Users, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { FullKitGate } from './FullKitGate';
 import { calculateTaskPriority } from '../utils/toc-calculations';
@@ -15,14 +16,14 @@ interface KanbanCardProps {
   showFullKitGate?: boolean;
 }
 
-export function KanbanCard({ 
+export function KanbanCard({
   task,
   onDelete,
   onClick,
   showFullKitGate = false,
 }: KanbanCardProps) {
   const { id, title, description, priority, assignees, dueDate, bufferConsumption, fullKitStatus, constraintType } = task;
-  
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'CARD',
     item: { id },
@@ -54,8 +55,8 @@ export function KanbanCard({
       ref={drag}
       className={`transition-opacity ${isDragging ? 'opacity-50' : 'opacity-100'}`}
     >
-      <Card 
-        className="p-4 mb-3 cursor-pointer hover:shadow-md transition-shadow bg-white"
+      <Card
+        className="p-4 mb-3 cursor-pointer hover:shadow-md transition-shadow bg-white overflow-visible"
         onClick={(e) => {
           if (onClick && !(e.target as HTMLElement).closest('button')) {
             onClick(id);
@@ -74,6 +75,7 @@ export function KanbanCard({
             variant="ghost"
             size="icon"
             className="h-6 w-6 shrink-0"
+            title="Удалить (временная функция)"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(id);
@@ -101,7 +103,7 @@ export function KanbanCard({
             <FullKitGate task={task} compact />
           </div>
         )}
-        
+
         {/* Индикатор буфера */}
         {bufferConsumption > 0 && (
           <div className="mb-3">

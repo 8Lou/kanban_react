@@ -22,6 +22,7 @@ interface AddTaskDialogProps {
     priority: 'low' | 'medium' | 'high';
     assignee: string;
     dueDate: string;
+    durationEstimate50: number;
   }) => void;
 }
 
@@ -31,8 +32,16 @@ export function AddTaskDialog({ open, onOpenChange, onAdd }: AddTaskDialogProps)
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [assignee, setAssignee] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [durationEstimate50, setDurationEstimate50] = useState<number>(0);
+  const [estimateError, setEstimateError] = useState('');
 
   const handleSubmit = () => {
+    // Валидация 50%-ной оценки
+    if (!durationEstimate50 || durationEstimate50 <= 0) {
+      setEstimateError('Обязательно укажите сокращенную оценку времени (50% от обычной)');
+      return;
+    }
+    
     if (title.trim()) {
       onAdd({
         title,
@@ -40,12 +49,15 @@ export function AddTaskDialog({ open, onOpenChange, onAdd }: AddTaskDialogProps)
         priority,
         assignee,
         dueDate,
+        durationEstimate50,
       });
       setTitle('');
       setDescription('');
       setPriority('medium');
       setAssignee('');
       setDueDate('');
+      setDurationEstimate50(0);
+      setEstimateError('');
       onOpenChange(false);
     }
   };
@@ -109,6 +121,34 @@ export function AddTaskDialog({ open, onOpenChange, onAdd }: AddTaskDialogProps)
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="duration" className="flex items-center gap-2">
+              50%-ная оценка времени (часы) *
+              <span className="text-xs text-orange-600 font-normal">
+                ⚠️ Принцип ТОС
+              </span>
+            </Label>
+            <Input
+              id="duration"
+              type="number"
+              min="0.5"
+              step="0.5"
+              value={durationEstimate50 || ''}
+              onChange={(e) => {
+                setDurationEstimate50(Number(e.target.value));
+                setEstimateError('');
+              }}
+              placeholder="Например: обычно 8 часов → укажите 4"
+              className={estimateError ? 'border-red-500' : ''}
+            />
+            <p className="text-xs text-gray-600">
+              💡 Укажите <strong>сокращенную оценку без запасов времени</strong>. 
+              Остальные 50% автоматически добавятся в буфер потока.
+            </p>
+            {estimateError && (
+              <p className="text-xs text-red-600">{estimateError}</p>
+            )}
           </div>
         </div>
         <DialogFooter>

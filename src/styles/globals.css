@@ -187,3 +187,13 @@
 html {
   font-size: var(--font-size);
 }
+/* Tooltip styles */
+.hover-tooltip:hover + div {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) translateY(-4px) scale(1) !important;
+}
+
+.hover-tooltip + div {
+  transform: translateX(-50%) translateY(0px) scale(0.95);
+}

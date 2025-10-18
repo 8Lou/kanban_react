@@ -13,7 +13,6 @@ import { RopeControl } from './components/RopeControl';
 import { TOCDashboard } from './components/TOCDashboard';
 import { LayoutGrid, Settings, BarChart3, ClipboardList, Anchor, AlertTriangle } from 'lucide-react';
 import { Button } from './components/ui/button';
-import { Card } from './components/ui/card';
 import { Task } from './types/task';
 import { ToastContainer } from './components/ui/toast-container';
 import { 
@@ -21,7 +20,6 @@ import {
   canStartNewTask, 
   validateFullKit,
   sortTasksByPriority,
-  calculateFlowBuffer,
 } from './utils/toc-calculations';
 import { toast } from './utils/toast';
 
@@ -48,9 +46,21 @@ export default function App() {
   const [detectedConstraint, setDetectedConstraint] = useState<string | null>(null);
 
   useEffect(() => {
+    // Загрузка задач с бэкенда
     fetch('http://localhost:3001/tasks')
-      .then((res) => res.json())
-      .then((data) => setTasks(data));
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json();
+      })
+      .then((data) => setTasks(data))
+      .catch(() => {
+        toast.error("Не удалось загрузить задачи с сервера.", {
+          description: "Будут использованы демонстрационные данные.",
+        });
+        setTasks(initialTasks);
+      });
   }, []);
 
   useEffect(() => {
@@ -71,7 +81,7 @@ export default function App() {
         }`);
       }
     }
-  }, [tasks, wipLimits]);
+  }, [tasks, wipLimits, detectedConstraint]);
 
   const handleDrop = (taskId: string, newStatus: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -92,7 +102,7 @@ export default function App() {
     const targetTasks = tasks.filter(t => t.status === newStatus);
     const limit = wipLimits[newStatus as keyof typeof wipLimits];
     
-    if (targetTasks.length >= limit) {
+    if (limit && targetTasks.length >= limit) {
       toast.error('WIP-лимит превышен', {
         description: `В колонке "${
           newStatus === 'todo' ? 'К выполнению' : 
@@ -121,7 +131,7 @@ export default function App() {
           return {
             ...t,
             status: newStatus,
-            activityLog: [...t.activityLog, activityEntry],
+            activityLog: [...(t.activityLog || []), activityEntry],
           };
         }
         return t;
@@ -207,6 +217,7 @@ export default function App() {
     if (!detectedConstraint) return 0;
     const constraintTasks = tasks.filter(t => t.status === detectedConstraint);
     const limit = wipLimits[detectedConstraint as keyof typeof wipLimits];
+    if (!limit) return 0;
     return (constraintTasks.length / limit) * 100;
   };
 
