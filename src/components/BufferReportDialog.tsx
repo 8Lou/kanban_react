@@ -11,6 +11,7 @@ import { Task } from '../types/task';
 import { ScrollArea } from './ui/scroll-area';
 import { AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { BufferStatusReport } from './BufferStatusReport';
 
 interface BufferReportDialogProps {
   tasks: Task[];
@@ -50,14 +51,19 @@ export function BufferReportDialog({ tasks, open, onOpenChange }: BufferReportDi
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="flex-1">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="status" className="flex-1">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="status">Статус буферов</TabsTrigger>
             <TabsTrigger value="overview">Обзор</TabsTrigger>
-            <TabsTrigger value="temperature">Температура буферов</TabsTrigger>
+            <TabsTrigger value="temperature">Температура</TabsTrigger>
             <TabsTrigger value="history">История</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="h-[60vh] mt-4">
+            <TabsContent value="status" className="space-y-4 mt-0">
+              <BufferStatusReport tasks={tasks} />
+            </TabsContent>
+
             <TabsContent value="overview" className="space-y-4 mt-0">
               {/* Сводка */}
               <div className="grid grid-cols-4 gap-4">

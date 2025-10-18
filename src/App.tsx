@@ -40,6 +40,7 @@ export default function App() {
     todo: 10,
     inProgress: 3,
     done: 20,
+    archive: 50,
   });
 
   // Автоматическое определение ограничения
@@ -152,6 +153,7 @@ export default function App() {
     priority: 'low' | 'medium' | 'high';
     assignee: string;
     dueDate: string;
+    durationEstimate50: number;
   }) => {
     const newTask: Task = {
       id: Date.now().toString(),
@@ -163,6 +165,7 @@ export default function App() {
       createdAt: new Date().toISOString(),
       dueDate: taskData.dueDate,
       status: currentStatus,
+      durationEstimate50: taskData.durationEstimate50,
       fullKitStatus: {
         isComplete: false,
         checklist: [],
@@ -223,7 +226,7 @@ export default function App() {
 
   const canStartNew = () => {
     const inProgressTasks = tasks.filter(t => t.status === 'inProgress').length;
-    return canStartNewTask(inProgressTasks, wipLimits.inProgress, detectedConstraint, 'inProgress', tasks.filter(t => t.status === detectedConstraint));
+    return canStartNewTask(inProgressTasks, wipLimits.inProgress, detectedConstraint || '', 'inProgress', tasks.filter(t => t.status === detectedConstraint || ''));
   };
 
   // Проверка возможности запуска новой задачи
@@ -303,7 +306,7 @@ export default function App() {
                   wipLimit={wipLimits.inProgress}
                   constraintStatus={detectedConstraint}
                   constraintLoad={getConstraintLoad()}
-                  canStartNew={canStartNew().canStart}
+                  canStartNew={canStartNew().allowed}
                   reason={canStartNew().reason}
                 />
               </div>
