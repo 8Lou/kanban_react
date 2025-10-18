@@ -50,6 +50,22 @@ export function KanbanCard({
     return 'bg-red-500';
   };
 
+  // Автоматический расчет приоритета по ТОС
+  const autoPriority = calculateTaskPriority(task);
+  const getPriorityColor = () => {
+    if (autoPriority >= 80) return 'bg-red-100 border-red-300 text-red-800';
+    if (autoPriority >= 60) return 'bg-orange-100 border-orange-300 text-orange-800';
+    if (autoPriority >= 40) return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+    return 'bg-gray-100 border-gray-300 text-gray-600';
+  };
+
+  const getPriorityLabel = () => {
+    if (autoPriority >= 80) return 'КРИТИЧЕСКИЙ';
+    if (autoPriority >= 60) return 'ВЫСОКИЙ';
+    if (autoPriority >= 40) return 'СРЕДНИЙ';
+    return 'НИЗКИЙ';
+  };
+
   return (
     <div
       ref={drag}
@@ -88,6 +104,9 @@ export function KanbanCard({
         <div className="flex flex-wrap gap-2 mb-3">
           <Badge className={priorityColors[priority]}>
             {priorityLabels[priority]}
+          </Badge>
+          <Badge className={`text-xs font-bold ${getPriorityColor()}`}>
+            ТОС: {getPriorityLabel()} ({autoPriority})
           </Badge>
           {fullKitStatus.isComplete && (
             <Badge className="bg-green-100 text-green-800 border-green-200">
