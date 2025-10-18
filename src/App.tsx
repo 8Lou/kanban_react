@@ -25,197 +25,10 @@ import {
 } from './utils/toc-calculations';
 import { toast } from './utils/toast';
 
+import { initialTasks } from './data/initial-tasks';
+
 export default function App() {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Разработать дизайн главной страницы',
-      description: 'Создать макет в Figma с учетом брендбука компании',
-      status: 'todo',
-      priority: 'high',
-      assignees: ['Анна Иванова'],
-      creator: 'Иван Менеджер',
-      createdAt: '2025-10-10T10:00:00',
-      dueDate: '2025-10-20',
-      fullKitStatus: {
-        isComplete: false,
-        checklist: [
-          { id: '1-1', title: 'Собрать референсы', completed: true },
-          { id: '1-2', title: 'Создать цветовую палитру', completed: false },
-          { id: '1-3', title: 'Утвердить типографику', completed: false },
-        ],
-      },
-      durationEstimate50: 16,
-      bufferConsumption: 25,
-      constraintType: 'drum',
-      constraintResource: 'Дизайнер',
-      gatekeeper: 'Петр Сидоров',
-      attachments: [],
-      comments: [],
-      activityLog: [
-        {
-          id: 'log-1',
-          user: 'Иван Менеджер',
-          action: 'создал задачу',
-          timestamp: '2025-10-10T10:00:00',
-        },
-      ],
-    },
-    {
-      id: '2',
-      title: 'Настроить CI/CD pipeline',
-      description: 'Автоматизировать процесс деплоя на production',
-      status: 'todo',
-      priority: 'medium',
-      assignees: ['Петр Сидоров'],
-      creator: 'Иван Менеджер',
-      createdAt: '2025-10-11T09:00:00',
-      dueDate: '2025-10-22',
-      fullKitStatus: {
-        isComplete: true,
-        checklist: [
-          { id: '2-1', title: 'Настроить GitHub Actions', completed: true },
-          { id: '2-2', title: 'Подключить тестовый сервер', completed: true },
-        ],
-      },
-      durationEstimate50: 8,
-      bufferConsumption: 15,
-      constraintType: 'none',
-      attachments: [],
-      comments: [],
-      activityLog: [
-        {
-          id: 'log-2',
-          user: 'Иван Менеджер',
-          action: 'создал задачу',
-          timestamp: '2025-10-11T09:00:00',
-        },
-      ],
-    },
-    {
-      id: '3',
-      title: 'Провести код-ревью',
-      description: 'Проверить pull request от команды backend',
-      status: 'inProgress',
-      priority: 'high',
-      assignees: ['Мария Петрова', 'Иван Смирнов'],
-      creator: 'Иван Менеджер',
-      createdAt: '2025-10-12T11:00:00',
-      dueDate: '2025-10-16',
-      fullKitStatus: {
-        isComplete: false,
-        checklist: [
-          { id: '3-1', title: 'Проверить код', completed: true },
-          { id: '3-2', title: 'Запустить тесты', completed: false },
-          { id: '3-3', title: 'Оставить комментарии', completed: false },
-        ],
-      },
-      durationEstimate50: 4,
-      bufferConsumption: 70,
-      constraintType: 'constraint',
-      constraintResource: 'Код-ревьюер',
-      gatekeeper: 'Мария Петрова',
-      attachments: [],
-      comments: [
-        {
-          id: 'c1',
-          author: 'Мария Петрова',
-          text: 'Начала проверку, нашла несколько моментов',
-          timestamp: '2025-10-13T14:30:00',
-        },
-      ],
-      activityLog: [
-        {
-          id: 'log-3',
-          user: 'Иван Менеджер',
-          action: 'создал задачу',
-          timestamp: '2025-10-12T11:00:00',
-        },
-        {
-          id: 'log-3-1',
-          user: 'Мария Петрова',
-          action: 'взяла в работу',
-          timestamp: '2025-10-13T10:00:00',
-        },
-      ],
-    },
-    {
-      id: '4',
-      title: 'Написать юнит-тесты',
-      description: 'Покрыть тестами новый функционал модуля аутентификации',
-      status: 'inProgress',
-      priority: 'medium',
-      assignees: ['Иван Смирнов'],
-      creator: 'Иван Менеджер',
-      createdAt: '2025-10-13T08:00:00',
-      dueDate: '2025-10-18',
-      fullKitStatus: {
-        isComplete: false,
-        checklist: [
-          { id: '4-1', title: 'Написать тесты для login', completed: true },
-          { id: '4-2', title: 'Написать тесты для logout', completed: false },
-        ],
-      },
-      durationEstimate50: 6,
-      bufferConsumption: 45,
-      constraintType: 'none',
-      attachments: [],
-      comments: [],
-      activityLog: [
-        {
-          id: 'log-4',
-          user: 'Иван Менеджер',
-          action: 'создал задачу',
-          timestamp: '2025-10-13T08:00:00',
-        },
-      ],
-    },
-    {
-      id: '5',
-      title: 'Обновить документацию API',
-      description: 'Добавить описание новых endpoint\'ов в Swagger',
-      status: 'done',
-      priority: 'low',
-      assignees: ['Ольга Козлова'],
-      creator: 'Иван Менеджер',
-      createdAt: '2025-10-08T10:00:00',
-      dueDate: '2025-10-14',
-      fullKitStatus: {
-        isComplete: true,
-        checklist: [
-          { id: '5-1', title: 'Описать новые endpoints', completed: true },
-          { id: '5-2', title: 'Добавить примеры запросов', completed: true },
-        ],
-      },
-      durationEstimate50: 3,
-      bufferConsumption: 100,
-      constraintType: 'none',
-      attachments: [
-        {
-          id: 'f1',
-          name: 'API_documentation.pdf',
-          size: '2.4 MB',
-          uploadedBy: 'Ольга Козлова',
-          uploadedAt: '2025-10-14T16:00:00',
-        },
-      ],
-      comments: [],
-      activityLog: [
-        {
-          id: 'log-5',
-          user: 'Иван Менеджер',
-          action: 'создал задачу',
-          timestamp: '2025-10-08T10:00:00',
-        },
-        {
-          id: 'log-5-1',
-          user: 'Ольга Козлова',
-          action: 'завершила задачу',
-          timestamp: '2025-10-14T16:00:00',
-        },
-      ],
-    },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>('todo');
@@ -397,6 +210,11 @@ export default function App() {
     return (constraintTasks.length / limit) * 100;
   };
 
+  const canStartNew = () => {
+    const inProgressTasks = tasks.filter(t => t.status === 'inProgress').length;
+    return canStartNewTask(inProgressTasks, wipLimits.inProgress, detectedConstraint, 'inProgress', tasks.filter(t => t.status === detectedConstraint));
+  };
+
   // Проверка возможности запуска новой задачи
   const checkCanStartNew = (status: string) => {
     const currentTasks = tasks.filter(t => t.status === status);
@@ -467,6 +285,18 @@ export default function App() {
           <div className="flex flex-col mb-2">
             <MetricsGrid tasks={tasks} />
             {/* Дашборд ТОС */}
+            {ropeControlOpen && (
+              <div className="mt-4">
+                <RopeControl 
+                  currentWIP={tasks.filter(t => t.status === 'inProgress').length}
+                  wipLimit={wipLimits.inProgress}
+                  constraintStatus={detectedConstraint}
+                  constraintLoad={getConstraintLoad()}
+                  canStartNew={canStartNew().canStart}
+                  reason={canStartNew().reason}
+                />
+              </div>
+            )}
             <TOCDashboard tasks={tasks} detectedConstraint={detectedConstraint} />
           </div>
 

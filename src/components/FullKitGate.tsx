@@ -25,7 +25,7 @@ export function FullKitGate({ task, onApprove, onReject, compact = false }: Full
         {validation.valid ? (
           <>
             <CheckCircle2 className="h-3 w-3 text-green-600" />
-            <span className="text-green-700">Full-kit готов</span>
+            <span className="text-green-700">Комплект готов</span>
           </>
         ) : (
           <>
