@@ -1052,7 +1052,11 @@
   }
 
   .rounded-xl {
-    border-radius: calc(var(--radius)  + 4px);
+    border-radius: calc(var(--radius)  + 6px);
+  }
+
+  .rounded-3xl {
+    border-radius: calc(var(--radius)  + 10px);
   }
 
   .rounded-xs {
