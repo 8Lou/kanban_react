@@ -37,7 +37,8 @@ export function KanbanColumn({ title, status, tasks, wipLimit, isConstraint, onD
   };
 
   return (
-    <div className={`flex flex-col h-full min-w-[320px] ${isConstraint ? 'border-red-500 border-4' : ''}`}>
+    <div className={`flex flex-col h-full ${isConstraint ? 'border-red-500 border-4' : ''}`}
+    style={{ minWidth: '380px', maxWidth: '380px' }}>
       <div className={`p-4 rounded-t-lg border-b-2 ${
         isOverLimit 
           ? 'bg-red-100 border-red-400' 
@@ -93,7 +94,7 @@ export function KanbanColumn({ title, status, tasks, wipLimit, isConstraint, onD
       </div>
       <div
         ref={drop}
-        className={`flex-1 p-4 bg-gray-50 rounded-b-lg transition-colors ${
+        className={`flex-1 p-4 bg-gray-200 rounded-b-lg transition-colors ${
           isOver ? 'bg-blue-50 border-2 border-blue-300 border-dashed' : 'border border-gray-200'
         } overflow-y-auto`}
       >
