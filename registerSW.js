@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/kanban_react/sw.js', { scope: '/kanban_react/' })})}
